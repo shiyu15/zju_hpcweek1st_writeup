@@ -1,6 +1,21 @@
-看到一个算子是矩阵乘法的，一个算子是向量点积的，第一个算子会用到第二个算子的实现。
+# rvllm
+这道题的推理框架是llama.cpp，我上次看见它还是两三年前。那时候作者Georgi Gerganov独自写了这个框架的消息被ai三大顶会、知乎广泛报道。今年一搜索发现已经89k的star了。相比vllm，它更适合在一些边缘计算的设备上部署。
 
-用riscv写了一版第二个向量点积算子，差不多有189分了
+这道题也很有意思，这个推理框架还很智能，我使用`Ofast`的优化等级，直接报错，说不允许这样的优化。开发者竟然连这也能注意到，非常有实力。
+```cpp
+hpcweek/rvllm/ggml/src/ggml-cpu/vec.h:965:2: error: #error "some routines in ggml.c require non-finite math arithmetics -- pass -fno-finite-math-only to the compiler to fix"
+  965 | #error "some routines in ggml.c require non-finite math arithmetics -- pass -fno-finite-math-only to the compiler to fix"
+      |  ^~~~~
+/hpcweek/rvllm/ggml/src/ggml-cpu/vec.h:966:2: error: #error "ref: https://github.com/ggml-org/llama.cpp/pull/7154#issuecomment-2143844461"
+  966 | #error "ref: https://github.com/ggml-org/llama.cpp/pull/7154#issuecomment-2143844461"
+      |  ^~~~~
+```
+
+
+## 优化
+### 1.使用riscv汇编
+看到一个算子是矩阵乘法的，一个算子是向量点积的，第一个算子会用到第二个算子的实现。
+用riscv写了一版第二个向量点积算子，差不多有190分了。暑假的超算小学期有一些写riscv汇编的[教程](https://hpc101.zjusct.io/lab/Lab2.5-RISC-V/)，很有用。
 
 ```cpp
     // 处理每个 block (每个 block 有 32 个元素)
@@ -46,3 +61,8 @@
         res += block_sum * scale_x * scale_y;
     }
 ```
+
+之后我费力去进行优化，最终也差不多是190分，不是很懂还能怎么提高性能。
+
+### 2.优化尝试
+我使用printf打印出第一个算子`ggml_compute_forward_mul_mat_one_chunk`的一些入参，看看有没有可以缓存的，或者可以针对一些特定的路径进行优化。但是结果没有好的。我现在这个算子的实现应该和原版性能没有差别。
