@@ -8,7 +8,9 @@ chunk是一个从最底到最高的柱形区域，在长宽(x和z)都为16，高
 我们接下来就可以看一下测试了。torch-mars的测试里面第一行
 `ensure_world -8 -8 8 8`就是创建一个chunk的二维网格，从-8到8都有。我们需要计算光照衰减，是每个block的光照传播给周围的block会衰减。
 
-要想进行优化，首先要看一下性能热点。可以用perf或者vtune的硬件采样模式来看（软件采样模式不能用，因为go语言的profiler会占用对应的采样信号）。可以看到热点主要是在lightTick.cpp文件里。
+要想进行优化，首先要看一下性能热点。可以用perf或者vtune的硬件采样模式来看（软件采样模式不能用，因为go语言的profiler会占用对应的采样信号）。下面是我优化的早期（此时具体做了哪些优化已经记不清了）可以看到热点主要是在lightTick.cpp文件里。尤其是floodFillLight函数，非常耗时。其次热点是储存chunk的unordered的访问操作以及储存光照节点的queue的插入操作。
+![vtune1截图](file/vtune1.png)
+
 
 ## 优化
 ### 1. 把储存chunk的结构从哈希表改为二维数组
@@ -163,7 +165,39 @@ void floodFillLightArray(Chunk* chunksArray, int width, int height, int minX, in
 }
 ```
 
+### 3.优化发光block数据结构
+之前的profile也能看到储存发光block的queue的插入操作也很消耗时间，因此我想从两方面去优化。
 
+第一是把原先储存发光block的`tuple<int,int,...,int>`去改成下面这个更节省空间的数据结构。因为有些数据的取值范围确实不需要int这么大的范围。这样可以提高cache中储存的这种数据结构的数量，提高cache利用率。能略微提高十分左右的性能。
+```cpp
+struct LightNode {
+    int16_t cX, cZ;   // 区块坐标，范围小，用 int16 足够
+    int16_t bX, bY, bZ; // 方块坐标：X/Z∈[0,15]，Y∈[-64,319]（都能放进 int16）
+    uint8_t level;    // 光照等级 0..15
+    uint8_t flags;    // bit0: fromAbove
+    LightNode(int16_t cX,int16_t cZ,int16_t bX,int16_t bY,int16_t bZ,
+            uint8_t level, uint8_t flags):cX(cX),cZ(cZ),bX(bX),bY(bY),bZ(bZ),level(level),flags(flags){}
+    inline bool fromAbove() const { return flags & 1; }
+};
+```
+第二是把queue这个数据结构改掉，例如一开始分配一个长度为1000的vector，然后只从后面塞入输入，不去像queue的底层实现deque那样释放开头的数据。我想这样可能会让数据集中在程序结束时释放，也能提升想能，但是好像没有效果。
+
+### 4.其他的思路
+比赛结束之后在比赛群里讨论，似乎可以做到只更新变化的光源的光照，这样就不需要对每个block去检查是否是光源了，会省一些时间，但是我实现不出来。
+
+
+### 5.杂谈
+在使用vtune进行硬件采样时。因为vtune只能对intel的cpu进行硬件采样，无法对我笔记本和台式机的amd cpu去进行硬件采样，因此我用我的老e5-2686v4服务器来运行这个程序，进行vtune采样。但是最新的vtune 2025版本不支持对我的这个老e5 cpu去进行硬件采样。要是想在官方渠道下载老版本vtune，[需要花几百美元](https://community.intel.com/t5/Analyzers/where-can-I-download-an-older-version-vtune/m-p/1558591)去获得支持。我在下面这个[博客](https://www.andyqiu.cn/posts/tools/vtune/) 里下载到了老版本的vtune。互联网分享精神最有用的一集。
+
+在使用vtune进行profile时，只能看到汇编级别的性能热点。可以用下面的命令把可执行文件反汇编成汇编指令，看热点在哪里。
+```bash
+objdump -d -S --no-show-raw-insn libmc_tick_lib.so > libmc.asm
+```
+例如我从vtune里可以看到我优化得差不多的程序中，汇编级别的热点在这个test指令上。我们可以结合上面程序生成的汇编指令看上下文，看看这个test指令是干什么的。原来是上一步`xchgb`指令原子地取原子变量的值，再用test来检查是否是期望的值。合起来一看原来是自旋锁的自选操作。
+
+![vtune2截图](file/vtune2.png)
+
+检查修改的程序输出的`.mccs`文件是否和ref文件夹里的参看答案相同，可以使用`cmp`或者`sha256sum`命令，比使用`mc-go`内建的命令方便很多，50M的文件可能瞬间就出答案了，`cmp`命令还会贴心地告诉你是第多少个字节出错了。
 
 
 
