@@ -1,0 +1,36 @@
+ensure_world -8 -8 8 8
+rate 0
+clear_animate
+clear_sched
+clear_ticks
+clear_world
+clear_tps
+reset_tick
+settime 0 13000 false
+add_chunk data/map1-r.0.0.mca 0 0 8 8 0 0
+
+animate create r1 sphere 50 150 50 3 0 2398
+animate orbit r1 xz 20 1 0 1200
+animate create mars sphere 165 165 50 20 1 2398
+animate move mars -3 -3 0 0 60
+animate destroy mars 61
+
+sched 65 settime 0 4000 false
+
+animate create r2 rect 50 130 50 10 10 1 1
+animate spin r2 0 1 0 0 1200
+animate create r4 ring 20 60 20 15 18 6027
+animate spin  r4 0 0 0.2 0 1200
+animate orbit r4 xz 50 0.1 0 1200
+animate create r5 ring 30 40 30 17 18 2398
+animate spin r5 0 0.1 0.2 0 1200
+animate orbit r5 xy 50 -0.2 0 1200 1.4
+animate create r6 ring 30 100 30 3 4 2398
+animate orbit r6 xz 50 -0.02 0 1200 1.4
+
+animate precompute 200
+
+judge_create torch_mars.mccs 160 3 -8 -8 8 8 judge_tps.json
+# judge_compare ref/torch_mars.mccs 160 3 -8 -8 8 8
+# rate 1 
+tps

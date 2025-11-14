@@ -1,0 +1,7 @@
+# Cribbage
+# iteration=200
+x = 34, y = 21, rule = B3/S23
+4bo$3bobo$3bobo10bo$b2o2b2o9b3o$2bobo2bo11bo$2bob3obo9b2o$2o6bo$bob4o15bo$bob
+o2bo5bo8b2o7bo$2o2b2o6bo16bobo$2bobo7bo8bo7bobo$2bobo16bo6b2o2b2o$3bo7b2o8bo
+5bo2bobo$11bo15b4obo$25bo6b2o$14b2o9bob3obo$14bo11bo2bobo$15b3o9b2o2b2o$17bo
+10bobo$28bobo$29bo!

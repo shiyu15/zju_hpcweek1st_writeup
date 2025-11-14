@@ -1,0 +1,25 @@
+ensure_world 0 0 16 16 
+rate 0
+clear_animate
+clear_sched
+clear_ticks
+clear_world
+clear_tps
+reset_tick
+settime 0 13000 false
+add_chunk data/map3-r.0.0.mca 0 0 16 16 0 0
+
+animate create r1 random 1 40 0 255 100 300 0 255 86 8000 100
+animate create r2 random 1 40 0 255 100 300 0 255 86 7000 101
+animate create r3 random 1 40 0 255 100 300 0 255 86 10000 102
+animate create r4 random 1 40 0 255 100 150 0 255 102 2000 103
+animate create r5 random 1 40 0 255 100 150 0 255 102 3000 104
+animate create r6 random 1 40 0 255 100 150 0 255 102 4000 105
+
+animate precompute 100
+
+
+judge_create mountain_water.mccs 80 3 0 0 16 16 judge_tps.json
+# judge_compare ref/mountain_water.mccs 80 3 0 0 16 16
+# rate 1
+tps

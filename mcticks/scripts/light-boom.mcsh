@@ -1,0 +1,39 @@
+ensure_world 0 0 31 31
+rate 0
+clear_animate
+clear_sched
+clear_ticks
+clear_world
+clear_tps
+reset_tick
+settime 0 13000 false
+add_chunk data/map2-r.0.0.mca 0 0 31 31 0 0
+
+animate create g1 random 1 15 0 511 -60 0 0 511 2398 4000 100
+animate create g2 random 10 40 0 511 -60 0 0 511 6032 4000 101
+animate create g3 random 30 60 0 511 -60 0 0 511 11603 4000 102
+animate create g4 random 55 70 0 511 -60 0 0 511 19517 4000 103
+
+animate create r1 random 1 4 0 127 -60 0 0 128 2398 4000 111
+animate create r2 random 5 8 0 127 -60 0 0 127 6032 4000 112
+animate create r3 random 10 15 0 127 -60 0 0 127 11603 4000 113
+animate create r4 random 18 20 0 127 -60 0 0 127 19517 4000 114
+animate create r5 random 23 26 0 127 -60 0 0 127 5907 4000 115
+animate create r6 random 28 45 256 383 -60 0 256 383 6027 4000 116
+animate create r7 random 32 37 256 383 -60 0 256 383 13351 4000 117
+animate create r8 random 38 49 256 383 -60 0 256 383 2398 4000 118
+animate create r9 random 44 48 384 511 -60 0 384 511 6032 4000 119
+animate create r10 random 49 56 384 511 -60 0 384 511 11603 4000 120
+animate create r11 random 55 60 384 511 -60 0 384 511 19517 4000 121
+animate create r12 random 58 63 384 511 -60 0 384 511 5907 4000 122
+animate create r13 random 64 66 128 255 -60 0 128 255 6027 4000 123
+animate create r14 random 69 73 128 255 -60 0 128 255 13351 4000 124
+animate create r15 random 75 79 128 255 -60 0 128 255 2398 4000 125
+
+
+animate precompute 100
+
+judge_create light_boom.mccs 80 3 0 0 31 31 judge_tps.json
+# judge_compare ref/light_boom.mccs 80 3 0 0 31 31
+# rate 1
+tps

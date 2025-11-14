@@ -1,0 +1,4 @@
+pybind11==3.0.1
+setuptools==80.9.0
+numpy==2.3.3
+scipy==1.16.2
